@@ -28,4 +28,12 @@ namespace MyStore.Models
 		public double Total => Subtotal + SalesTax;
 
 	}
+
+	public class PurchaseOrderRequest
+	{
+		public int InventoryItemId { get; set; }
+		public int Quantity { get; set; }
+		public string Name { get; set; }
+		public string Email { get; set; }
+	}
 }

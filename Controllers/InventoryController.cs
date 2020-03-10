@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using MyStore.Models;
 using MyStore.Services;
+using Stripe;
+using Stripe.Checkout;
 
 namespace MyStore.Controllers
 {
@@ -93,6 +95,37 @@ namespace MyStore.Controllers
 		public IEnumerable<PurchaseOrder> GetPurchaseOrders()
 		{
 			return _dataService.GetPurchaseOrdersList();
+		}
+
+		[HttpPost("payment")]
+		public Session InitiatePaymentWithStripe(PurchaseOrderRequest request)
+		{
+			var item = _dataService.GetInventoryItemById(request.InventoryItemId);
+			// Set your secret key. Remember to switch to your live secret key in production!
+		  // See your keys here: https://dashboard.stripe.com/account/apikeys
+			StripeConfiguration.ApiKey = "sk_test_FHvCm2i7lm7nOskYNm3nI0Ba";
+
+			var options = new SessionCreateOptions {
+					PaymentMethodTypes = new List<string> {
+							"card",
+					},
+					LineItems = new List<SessionLineItemOptions> {
+							new SessionLineItemOptions {
+									Name = $"{item.Name}",
+									Description = $"{item.Description}",
+									Amount = (long)item.Price*100,
+									Currency = "usd",
+									Quantity = request.Quantity,
+							},
+					},
+					SuccessUrl = "http:localhost:4200/success?session_id={CHECKOUT_SESSION_ID}",
+					CancelUrl = "http:localhost:4200/cancel",
+			};
+
+			var service = new SessionService();
+			Session session = service.Create(options);
+
+			return session;
 		}
 	}
 }
